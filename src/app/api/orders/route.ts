@@ -12,10 +12,15 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null) as {
     items?: CartLine[];
     customer?: { name?: unknown; email?: unknown; phone?: unknown; address?: unknown };
+    acceptedTerms?: unknown;
   } | null;
 
   if (!body?.items?.length || !validateCart(body.items, products)) {
     return NextResponse.json({ error: 'Invalid order items' }, { status: 400 });
+  }
+
+  if (body.acceptedTerms !== true) {
+    return NextResponse.json({ error: 'Debés aceptar los Términos y Condiciones para confirmar el pedido.' }, { status: 400 });
   }
 
   const name = clean(body.customer?.name);
@@ -43,8 +48,8 @@ export async function POST(request: NextRequest) {
     await client.query('BEGIN');
     const total = calculateCartTotal(body.items, products);
     const order = await client.query(
-      `insert into orders (user_id, status, total, guest_name, guest_email, guest_phone, guest_address)
-       values ($1, $2, $3, $4, $5, $6, $7)
+      `insert into orders (user_id, status, total, guest_name, guest_email, guest_phone, guest_address, accepted_terms_at)
+       values ($1, $2, $3, $4, $5, $6, $7, now())
        returning id, status, total, created_at`,
       [session?.user_id ?? null, 'pending', total, name, email, phone, address],
     );
