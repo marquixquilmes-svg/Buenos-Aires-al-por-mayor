@@ -27,8 +27,14 @@ export async function POST(request: NextRequest) {
       const product = products.find(item => item.id === line.productId);
       if (!product) throw new Error('Product not found');
       await client.query(
-        'insert into order_items (order_id, product_id, quantity, unit_price) values ($1, $2, $3, $4)',
-        [order.rows[0].id, product.id, line.quantity, product.price],
+        `insert into products (id, name, slug, category, price, stock, active)
+         values ($1, $2, $3, $4, $5, 999999, true)
+         on conflict (id) do update set name = excluded.name, category = excluded.category, price = excluded.price, active = true`,
+        [product.id, product.name, product.id, product.category, product.price],
+      );
+      await client.query(
+        'insert into order_items (order_id, product_id, product_name, quantity, unit_price) values ($1, $2, $3, $4, $5)',
+        [order.rows[0].id, product.id, product.name, line.quantity, product.price],
       );
     }
 
