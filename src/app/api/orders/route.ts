@@ -89,7 +89,15 @@ export async function POST(request: NextRequest) {
     await client.query('ROLLBACK');
     const diagnostic = describeError(error);
     console.error('Order creation failed', diagnostic);
-    return NextResponse.json({ error: 'No se pudo crear el pedido. Verificá que la base de datos esté actualizada.' }, { status: 500 });
+    return NextResponse.json({
+      error: 'No se pudo crear el pedido.',
+      diagnostic: {
+        name: diagnostic.name,
+        message: diagnostic.message,
+        code: diagnostic.code,
+        constraint: diagnostic.constraint,
+      },
+    }, { status: 500 });
   } finally {
     client.release();
   }
