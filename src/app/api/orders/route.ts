@@ -8,6 +8,20 @@ function clean(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function describeError(error: unknown) {
+  if (error && typeof error === 'object') {
+    const candidate = error as { name?: unknown; message?: unknown; code?: unknown; detail?: unknown; constraint?: unknown };
+    return {
+      name: typeof candidate.name === 'string' ? candidate.name : 'Error',
+      message: typeof candidate.message === 'string' ? candidate.message : 'Unknown error',
+      code: typeof candidate.code === 'string' ? candidate.code : undefined,
+      detail: typeof candidate.detail === 'string' ? candidate.detail : undefined,
+      constraint: typeof candidate.constraint === 'string' ? candidate.constraint : undefined,
+    };
+  }
+  return { name: 'Error', message: String(error) };
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null) as {
     items?: CartLine[];
@@ -73,7 +87,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, order: order.rows[0] }, { status: 201 });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Order creation failed', error);
+    const diagnostic = describeError(error);
+    console.error('Order creation failed', diagnostic);
     return NextResponse.json({ error: 'No se pudo crear el pedido. Verificá que la base de datos esté actualizada.' }, { status: 500 });
   } finally {
     client.release();
