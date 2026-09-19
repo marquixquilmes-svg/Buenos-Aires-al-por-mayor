@@ -1,5 +1,5 @@
 -- PostgreSQL schema for the commercial V1.
--- Run through a migration system before production.
+-- Run through the migration system before production.
 
 create table if not exists users (
   id uuid primary key default gen_random_uuid(),
@@ -33,9 +33,13 @@ create table if not exists products (
 
 create table if not exists orders (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references users(id),
+  user_id uuid references users(id) on delete set null,
   status text not null default 'pending' check (status in ('pending','confirmed','preparing','shipped','cancelled')),
   total numeric(12,2) not null check (total >= 0),
+  guest_name text,
+  guest_email text,
+  guest_phone text,
+  guest_address text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -53,3 +57,5 @@ create index if not exists sessions_user_id_idx on sessions(user_id);
 create index if not exists products_category_idx on products(category);
 create index if not exists orders_user_id_idx on orders(user_id);
 create index if not exists orders_status_idx on orders(status);
+create index if not exists orders_guest_email_idx on orders(guest_email);
+create index if not exists orders_guest_phone_idx on orders(guest_phone);
