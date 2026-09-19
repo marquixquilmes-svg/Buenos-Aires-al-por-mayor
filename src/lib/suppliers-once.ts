@@ -1,0 +1,12 @@
+export type SupplierVerification = 'verified-source' | 'directory' | 'needs-review';
+
+export type OnceSupplier = { id:string; name:string; address:string; categories:string[]; website?:string; phone?:string; wholesale:boolean; verification:SupplierVerification; source:string; notes?:string };
+
+export const onceMobileSuppliers: OnceSupplier[] = [
+ {id:'distriland',name:'DistriLand / Energía Móvil SRL',address:'Av. Corrientes 2279, Once/Balvanera, CABA',categories:['Módulos/pantallas','Fundas','Cables','Cargadores','Baterías','Accesorios','Herramientas'],website:'https://www.distriland.com.ar/',phone:'11 7079-3030',wholesale:true,verification:'verified-source',source:'Sitio oficial',notes:'Mayorista e importador; atención a técnicos, locales y distribuidores.'},
+ {id:'wifix-once',name:'Wifix',address:'Larrea 747, Once/Balvanera, CABA',categories:['Módulos/pantallas','Baterías','Pines de carga','Placas de carga','Cámaras','Tapas'],website:'https://www.wifixargentina.com.ar/mayorista-de-repuestos-de-celulares-en-once',wholesale:true,verification:'verified-source',source:'Sitio oficial'},
+ {id:'star-mayorista',name:'Star Mayorista',address:'Larrea 148, Zona Once, CABA',categories:['Fundas','Vidrios','Cables','Cargadores','Auriculares','Soportes','Baterías','Informática'],website:'https://www.starmayorista.com.ar/',wholesale:true,verification:'verified-source',source:'Sitio oficial'},
+ {id:'tecnoland',name:'TecnoLand',address:'Av. Corrientes 2279, Once, CABA',categories:['Módulos/pantallas','Fundas','Cables','Cargadores','Baterías','Repuestos'],website:'https://www.tecnoland.com.ar/',phone:'11 7079-3030',wholesale:true,verification:'verified-source',source:'Sitio oficial',notes:'La empresa informa venta mayorista mediante DistriLand.'},
+ {id:'oestech',name:'OESTECH',address:'Pasteur 337, Once/Balvanera, CABA',categories:['Cables','Cargadores','Auriculares','Soportes','Parlantes','Electrónica'],website:'https://oestech.com.ar/',phone:'+54 9 11 6878-3909',wholesale:true,verification:'verified-source',source:'Sitio oficial'},
+ {id:'tiva-mayorista',name:'Tiva Mayorista',address:'Retiro en Once, CABA',categories:['Cargadores','Cables','Adaptadores','Auriculares','Electrónica','Accesorios PC'],website:'https://tivamayorista.com/',wholesale:true,verification:'verified-source',source:'Sitio oficial',notes:'La web informa retiro gratis en Once y mínimo mayorista de $50.000.'}
+];
