@@ -37,12 +37,11 @@ export async function createMercadoPagoOrder(input: {
     description: `Pedido ${input.orderId}`,
     payer: { email: input.email },
     items: [{
-      title: title.slice(0, 256),
+      title: title.slice(0, 150),
       quantity: 1,
       unit_price: totalAmount,
     }],
     config: {
-      notification_url: `${input.baseUrl}/api/mercadopago/webhook`,
       online: {
         success_url: `${input.baseUrl}/checkout/success?order=${input.orderId}`,
         failure_url: `${input.baseUrl}/checkout/failure?order=${input.orderId}`,
