@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sessionCookie } from '@/lib/auth';
+import { hashToken, sessionCookie } from '@/lib/auth';
+import { findSessionByTokenHash } from '@/lib/db/repositories';
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(sessionCookie.name)?.value;
+  if (!token) return NextResponse.json({ authenticated: false }, { status: 200 });
 
-  // The database-backed session lookup will be added when the DB adapter is connected.
-  return NextResponse.json({ authenticated: Boolean(token) });
+  const session = await findSessionByTokenHash(hashToken(token));
+  if (!session) {
+    const response = NextResponse.json({ authenticated: false }, { status: 200 });
+    response.cookies.set({ ...sessionCookie, value: '', maxAge: 0 });
+    return response;
+  }
+
+  return NextResponse.json({
+    authenticated: true,
+    user: { id: session.user_id, email: session.email, role: session.role },
+    expiresAt: session.expires_at,
+  });
 }
