@@ -38,7 +38,11 @@ export default function CheckoutPage() {
       const data = await response.json().catch(() => ({}));
       setLoading(false);
       if (!response.ok) {
-        setError(data.error ?? 'No se pudo crear el pedido.');
+        const diagnostic = data?.diagnostic;
+        const technical = diagnostic?.message
+          ? ` [${diagnostic.code ?? 'DB'}] ${diagnostic.message}${diagnostic.constraint ? ` (constraint: ${diagnostic.constraint})` : ''}`
+          : '';
+        setError(`${data.error ?? 'No se pudo crear el pedido.'}${technical}`);
         return;
       }
       const id = String(data.order?.id ?? '');
@@ -64,7 +68,7 @@ export default function CheckoutPage() {
       <label style={{display:'block',marginBottom:18}}>Dirección de entrega<input required name="address" autoComplete="street-address" minLength={8} style={{display:'block',width:'100%',marginTop:7,padding:13,border:'1px solid #ccc',borderRadius:8}} /></label>
       <label style={{display:'flex',gap:10,alignItems:'flex-start',margin:'8px 0 18px',fontSize:14,lineHeight:1.5}}><input required type="checkbox" name="terms" style={{marginTop:4,width:18,height:18}} /><span>Acepto los <a href="/terminos-y-condiciones" target="_blank" rel="noreferrer">Términos y Condiciones</a> y la <a href="/privacidad" target="_blank" rel="noreferrer">Política de Privacidad</a> de Buenos Aires al por mayor.</span></label>
       <div style={{padding:'14px 0',borderTop:'1px solid #eee',marginBottom:14}}><strong>Total del pedido: ${total.toLocaleString('es-AR')}</strong></div>
-      {error && <p role="alert" style={{color:'#a33',fontSize:14}}>{error}</p>}
+      {error && <p role="alert" style={{color:'#a33',fontSize:14,whiteSpace:'pre-wrap'}}>{error}</p>}
       <button type="submit" disabled={loading} style={{width:'100%',padding:14,border:0,borderRadius:8,background:'#111',color:'#fff',fontWeight:700}}>{loading?'Creando pedido…':'Confirmar pedido como invitado'}</button>
       <p style={{fontSize:12,color:'#777',marginTop:12}}>Tus datos se utilizan para validar y coordinar este pedido. No necesitás registrarte.</p>
     </form>}</div>
