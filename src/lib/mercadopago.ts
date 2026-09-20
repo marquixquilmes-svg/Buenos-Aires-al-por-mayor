@@ -40,8 +40,6 @@ export async function createMercadoPagoOrder(input: {
       title: title.slice(0, 256),
       quantity: 1,
       unit_price: totalAmount,
-      total_amount: totalAmount,
-      unit_measure: 'unit',
     }],
     config: {
       notification_url: `${input.baseUrl}/api/mercadopago/webhook`,
