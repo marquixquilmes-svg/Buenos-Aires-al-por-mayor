@@ -14,6 +14,15 @@ function getConnectionString() {
   );
 }
 
+function withSecureSslMode(connectionString: string) {
+  // Keep certificate/hostname verification explicit so future pg versions
+  // do not silently change the security semantics of the connection string.
+  if (!connectionString.includes('sslmode=')) {
+    return `${connectionString}${connectionString.includes('?') ? '&' : '?'}sslmode=verify-full`;
+  }
+  return connectionString;
+}
+
 export function getDb() {
   const connectionString = getConnectionString();
 
@@ -22,7 +31,7 @@ export function getDb() {
   }
 
   pool ??= new Pool({
-    connectionString,
+    connectionString: withSecureSslMode(connectionString),
     max: 10,
     connectionTimeoutMillis: 10000,
   });
