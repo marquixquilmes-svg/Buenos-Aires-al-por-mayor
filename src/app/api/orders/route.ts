@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db/client';
+import { ensureDatabaseReady } from '@/lib/db/client';
 import { products } from '@/lib/catalog';
 import { calculateCartTotal, validateCart, type CartLine } from '@/lib/checkout';
 import { createMercadoPagoOrder } from '@/lib/mercadopago';
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (phone.replace(/\D/g, '').length < 8) return NextResponse.json({ error: 'Ingresá un teléfono válido.' }, { status: 400 });
     if (address.length < 8) return NextResponse.json({ error: 'Ingresá una dirección completa.' }, { status: 400 });
 
-    const db = getDb();
+    const db = await ensureDatabaseReady();
     const client = await db.connect();
     try {
       await client.query('BEGIN');
