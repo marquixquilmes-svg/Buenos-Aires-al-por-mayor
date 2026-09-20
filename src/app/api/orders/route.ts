@@ -55,11 +55,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Ingresá una dirección completa.' }, { status: 400 });
   }
 
-  const session = await getCurrentSession();
-  const db = getDb();
-  const client = await db.connect();
+  let client: Awaited<ReturnType<ReturnType<typeof getDb>['connect']>> | undefined;
   try {
+    const session = await getCurrentSession();
+    const db = getDb();
+    client = await db.connect();
     await client.query('BEGIN');
+
     const total = calculateCartTotal(body.items, products);
     const order = await client.query(
       `insert into orders (user_id, status, total, guest_name, guest_email, guest_phone, guest_address, accepted_terms_at)
@@ -86,7 +88,9 @@ export async function POST(request: NextRequest) {
     await client.query('COMMIT');
     return NextResponse.json({ ok: true, order: order.rows[0] }, { status: 201 });
   } catch (error) {
-    await client.query('ROLLBACK');
+    if (client) {
+      try { await client.query('ROLLBACK'); } catch { /* ignore rollback failure */ }
+    }
     const diagnostic = describeError(error);
     console.error('Order creation failed', diagnostic);
     return NextResponse.json({
@@ -99,6 +103,6 @@ export async function POST(request: NextRequest) {
       },
     }, { status: 500 });
   } finally {
-    client.release();
+    client?.release();
   }
 }
