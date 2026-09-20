@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
           baseUrl: new URL(request.url).origin,
         });
         await client.query(
-          `update orders set payment_order_id = $1, payment_status_detail = $2, updated_at = now() where id = $3`,
+          `update orders set payment_order_id = $1, payment_status_detail = $2 where id = $3`,
           [payment.id, 'created', orderId],
         );
       }
