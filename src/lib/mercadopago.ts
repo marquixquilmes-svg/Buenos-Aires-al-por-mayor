@@ -23,9 +23,6 @@ export async function createMercadoPagoOrder(input: {
 }) {
   const totalAmount = input.total.toFixed(2);
   const externalReference = input.orderId.replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 64);
-
-  // Checkout Pro Orders accepts a single transaction. Keep the full cart in our DB
-  // and represent the checkout as one consolidated transaction in Mercado Pago.
   const itemCount = input.items.reduce((sum, item) => sum + item.quantity, 0);
   const title = input.items.length === 1
     ? input.items[0].title
@@ -39,15 +36,13 @@ export async function createMercadoPagoOrder(input: {
     external_reference: externalReference,
     description: `Pedido ${input.orderId}`,
     payer: { email: input.email },
-    items: [
-      {
-        title: title.slice(0, 256),
-        quantity: 1,
-        unit_price: totalAmount,
-        total_amount: totalAmount,
-        unit_measure: 'unit',
-      },
-    ],
+    items: [{
+      title: title.slice(0, 256),
+      quantity: 1,
+      unit_price: totalAmount,
+      total_amount: totalAmount,
+      unit_measure: 'unit',
+    }],
     config: {
       notification_url: `${input.baseUrl}/api/mercadopago/webhook`,
       online: {
@@ -74,6 +69,7 @@ export async function createMercadoPagoOrder(input: {
     console.error('Mercado Pago order creation failed', {
       status: response.status,
       body: data,
+      body_json: JSON.stringify(data),
       payload: { ...payload, payer: { email: '[redacted]' } },
     });
     throw new Error('Mercado Pago order creation failed');
