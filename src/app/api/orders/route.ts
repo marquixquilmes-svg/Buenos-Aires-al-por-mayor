@@ -7,20 +7,6 @@ function clean(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function describeError(error: unknown) {
-  if (error && typeof error === 'object') {
-    const candidate = error as { name?: unknown; message?: unknown; code?: unknown; detail?: unknown; constraint?: unknown };
-    return {
-      name: typeof candidate.name === 'string' ? candidate.name : 'Error',
-      message: typeof candidate.message === 'string' ? candidate.message : 'Unknown error',
-      code: typeof candidate.code === 'string' ? candidate.code : undefined,
-      detail: typeof candidate.detail === 'string' ? candidate.detail : undefined,
-      constraint: typeof candidate.constraint === 'string' ? candidate.constraint : undefined,
-    };
-  }
-  return { name: 'Error', message: String(error) };
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => null) as {
@@ -55,8 +41,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Ingresá una dirección completa.' }, { status: 400 });
     }
 
-    // Guest checkout intentionally does not depend on an authenticated session.
-    // This prevents an old/incompatible login cookie from blocking a guest order.
     const userId = null;
     const db = getDb();
     const client = await db.connect();
@@ -89,31 +73,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, order: order.rows[0] }, { status: 201 });
     } catch (error) {
       await client.query('ROLLBACK').catch(() => undefined);
-      const diagnostic = describeError(error);
-      console.error('Order creation failed', diagnostic);
-      return NextResponse.json({
-        error: 'No se pudo crear el pedido.',
-        diagnostic: {
-          name: diagnostic.name,
-          message: diagnostic.message,
-          code: diagnostic.code,
-          constraint: diagnostic.constraint,
-        },
-      }, { status: 500 });
+      console.error('Order creation failed', error);
+      return NextResponse.json({ error: 'No se pudo crear el pedido. Intentá nuevamente.' }, { status: 500 });
     } finally {
       client.release();
     }
   } catch (error) {
-    const diagnostic = describeError(error);
-    console.error('Order request failed', diagnostic);
-    return NextResponse.json({
-      error: 'No se pudo procesar el pedido.',
-      diagnostic: {
-        name: diagnostic.name,
-        message: diagnostic.message,
-        code: diagnostic.code,
-        constraint: diagnostic.constraint,
-      },
-    }, { status: 500 });
+    console.error('Order request failed', error);
+    return NextResponse.json({ error: 'No se pudo procesar el pedido. Intentá nuevamente.' }, { status: 500 });
   }
 }
