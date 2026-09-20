@@ -9,6 +9,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState('');
   const [orderId, setOrderId] = useState('');
   const [orderSummary, setOrderSummary] = useState('');
+  const [checkoutUrl, setCheckoutUrl] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -33,7 +34,7 @@ export default function CheckoutPage() {
       const response = await fetch('/api/orders', {
         method:'POST',
         headers:{'content-type':'application/json'},
-        body:JSON.stringify({ items: items.map(item => ({ productId: item.id, quantity: item.quantity })), customer, acceptedTerms }),
+        body:JSON.stringify({ items: items.map(item => ({ productId: item.id, quantity: item.quantity })), customer, acceptedTerms, payNow: true }),
       });
       const data = await response.json().catch(() => ({}));
       setLoading(false);
@@ -46,8 +47,10 @@ export default function CheckoutPage() {
         return;
       }
       const id = String(data.order?.id ?? '');
+      const paymentUrl = typeof data.checkoutUrl === 'string' ? data.checkoutUrl : '';
       setOrderId(id);
       setOrderSummary(summary);
+      setCheckoutUrl(paymentUrl);
       clear();
     } catch {
       setLoading(false);
@@ -60,7 +63,7 @@ export default function CheckoutPage() {
   return <main style={{minHeight:'100vh',padding:'40px 6%',background:'#f7f7f5'}}>
     <a href="/carrito" style={{fontSize:14}}>← Volver al carrito</a>
     <div style={{maxWidth:760,margin:'40px auto'}}><p style={{textTransform:'uppercase',letterSpacing:2,fontSize:11}}>Checkout</p><h1 style={{fontSize:48,margin:'8px 0'}}>Finalizar pedido</h1>
-    {orderId ? <div style={{background:'#fff',border:'1px solid #ddd',borderRadius:14,padding:28}}><h2>Pedido creado</h2><p>Tu número de pedido es <strong>{orderId}</strong>.</p><p style={{color:'#666'}}>El pedido quedó registrado en Buenos Aires al por mayor.</p><a href={whatsapp} target="_blank" rel="noreferrer" style={{display:'inline-block',marginTop:12,padding:'13px 18px',background:'#111',color:'#fff',borderRadius:8}}>Continuar por WhatsApp</a><p style={{fontSize:13,color:'#777',marginTop:18}}>WhatsApp central: {BUSINESS_CONTACT.whatsappNumber}</p></div> : <form onSubmit={submit} style={{background:'#fff',border:'1px solid #ddd',borderRadius:14,padding:28}}>
+    {orderId ? <div style={{background:'#fff',border:'1px solid #ddd',borderRadius:14,padding:28}}><h2>Pedido creado</h2><p>Tu número de pedido es <strong>{orderId}</strong>.</p><p style={{color:'#666'}}>El pedido quedó registrado en Buenos Aires al por mayor.</p>{checkoutUrl ? <div style={{marginTop:20,padding:18,background:'#f7f7f5',borderRadius:10}}><strong>Pago seguro con Mercado Pago</strong><p style={{margin:'7px 0 14px',color:'#666',fontSize:14}}>Tu pedido está registrado. Continuá a Mercado Pago para completar el pago.</p><a href={checkoutUrl} style={{display:'block',textAlign:'center',padding:'14px 18px',background:'#111',color:'#fff',borderRadius:8,fontWeight:700}}>Pagar con Mercado Pago</a></div> : <p style={{marginTop:18,color:'#a33'}}>No se generó la URL de pago. Podés informar el pedido por WhatsApp.</p>}<a href={whatsapp} target="_blank" rel="noreferrer" style={{display:'inline-block',marginTop:16,padding:'13px 18px',background:'#fff',color:'#111',border:'1px solid #ccc',borderRadius:8}}>Continuar por WhatsApp</a><p style={{fontSize:13,color:'#777',marginTop:18}}>WhatsApp central: {BUSINESS_CONTACT.whatsappNumber}</p></div> : <form onSubmit={submit} style={{background:'#fff',border:'1px solid #ddd',borderRadius:14,padding:28}}>
       <div style={{padding:16,background:'#f7f7f5',borderRadius:10,marginBottom:22}}><strong>Compra como invitado</strong><p style={{margin:'7px 0 0',color:'#666',fontSize:14}}>No necesitás crear una cuenta. Para validar y coordinar el pedido solicitamos teléfono, email y dirección.</p></div>
       <label style={{display:'block',marginBottom:18}}>Nombre y apellido<input required name="name" autoComplete="name" style={{display:'block',width:'100%',marginTop:7,padding:13,border:'1px solid #ccc',borderRadius:8}} /></label>
       <label style={{display:'block',marginBottom:18}}>Email<input required name="email" type="email" autoComplete="email" style={{display:'block',width:'100%',marginTop:7,padding:13,border:'1px solid #ccc',borderRadius:8}} /></label>
@@ -69,7 +72,7 @@ export default function CheckoutPage() {
       <label style={{display:'flex',gap:10,alignItems:'flex-start',margin:'8px 0 18px',fontSize:14,lineHeight:1.5}}><input required type="checkbox" name="terms" style={{marginTop:4,width:18,height:18}} /><span>Acepto los <a href="/terminos-y-condiciones" target="_blank" rel="noreferrer">Términos y Condiciones</a> y la <a href="/privacidad" target="_blank" rel="noreferrer">Política de Privacidad</a> de Buenos Aires al por mayor.</span></label>
       <div style={{padding:'14px 0',borderTop:'1px solid #eee',marginBottom:14}}><strong>Total del pedido: ${total.toLocaleString('es-AR')}</strong></div>
       {error && <p role="alert" style={{color:'#a33',fontSize:14,whiteSpace:'pre-wrap'}}>{error}</p>}
-      <button type="submit" disabled={loading} style={{width:'100%',padding:14,border:0,borderRadius:8,background:'#111',color:'#fff',fontWeight:700}}>{loading?'Creando pedido…':'Confirmar pedido como invitado'}</button>
+      <button type="submit" disabled={loading} style={{width:'100%',padding:14,border:0,borderRadius:8,background:'#111',color:'#fff',fontWeight:700}}>{loading?'Creando pedido…':'Confirmar y pagar con Mercado Pago'}</button>
       <p style={{fontSize:12,color:'#777',marginTop:12}}>Tus datos se utilizan para validar y coordinar este pedido. No necesitás registrarte.</p>
     </form>}</div>
   </main>;
