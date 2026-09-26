@@ -1,4 +1,5 @@
 import { getDb } from './client';
+import { getMercadoPagoOrder } from '@/lib/mercadopago';
 
 export async function findUserByEmail(email: string) {
   const result = await getDb().query('select id, email, password_hash, role from users where email = $1 limit 1', [email]);
@@ -49,6 +50,46 @@ export async function findSessionByTokenHash(tokenHash: string) {
 
 export async function deleteSessionByTokenHash(tokenHash: string) {
   await getDb().query('delete from sessions where token_hash = $1', [tokenHash]);
+}
+
+export async function syncPendingMercadoPagoOrders() {
+  const db = getDb();
+  const result = await db.query(
+    `select id, payment_order_id
+     from orders
+     where payment_provider = 'mercadopago'
+       and payment_status = 'pending'
+       and payment_order_id is not null
+       and created_at > now() - interval '7 days'
+     order by created_at desc
+     limit 50`,
+  );
+
+  for (const order of result.rows) {
+    try {
+      const mpOrder = await getMercadoPagoOrder(String(order.payment_order_id));
+      const status = String(mpOrder?.status ?? '').toLowerCase();
+      const paymentStatus = status === 'processed' || status === 'approved' ? 'approved'
+        : status === 'canceled' || status === 'cancelled' ? 'cancelled'
+        : status === 'rejected' || status === 'failed' ? 'rejected'
+        : status === 'expired' ? 'cancelled'
+        : 'pending';
+
+      if (paymentStatus !== 'pending') {
+        await db.query(
+          `update orders
+           set payment_status = $1,
+               payment_status_detail = $2,
+               status = case when $1 = 'approved' then 'confirmed' else status end,
+               updated_at = now()
+           where id = $3::uuid`,
+          [paymentStatus, String(mpOrder?.status_detail ?? status), order.id],
+        );
+      }
+    } catch (error) {
+      console.error('Mercado Pago order sync failed', { orderId: order.id, paymentOrderId: order.payment_order_id, error });
+    }
+  }
 }
 
 export async function listAdminOrders() {
