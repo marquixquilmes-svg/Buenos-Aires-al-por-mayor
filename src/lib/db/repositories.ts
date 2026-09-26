@@ -29,7 +29,9 @@ export async function updateAdminUser(email: string, passwordHash: string) {
 
 export async function createSession(userId: string, tokenHash: string, expiresAt: string) {
   const result = await getDb().query(
-    'insert into sessions (user_id, token_hash, expires_at) values ($1, $2, $3) returning id, expires_at',
+    `insert into sessions (id, user_id, token_hash, expires_at)
+     values (gen_random_uuid()::text, $1, $2, $3)
+     returning id, expires_at`,
     [userId, tokenHash, expiresAt],
   );
   return result.rows[0];
