@@ -34,3 +34,39 @@ export async function findSessionByTokenHash(tokenHash: string) {
 export async function deleteSessionByTokenHash(tokenHash: string) {
   await getDb().query('delete from sessions where token_hash = $1', [tokenHash]);
 }
+
+export async function listAdminOrders() {
+  const result = await getDb().query(
+    `select
+       o.id,
+       o.status,
+       o.total,
+       o.guest_name,
+       o.guest_email,
+       o.guest_phone,
+       o.guest_address,
+       o.accepted_terms_at,
+       o.payment_status,
+       o.payment_provider,
+       o.payment_order_id,
+       o.payment_status_detail,
+       o.created_at,
+       o.updated_at,
+       coalesce(
+         jsonb_agg(
+           jsonb_build_object(
+             'productName', oi.product_name,
+             'quantity', oi.quantity,
+             'unitPrice', oi.unit_price
+           ) order by oi.product_name
+         ) filter (where oi.id is not null),
+         '[]'::jsonb
+       ) as items
+     from orders o
+     left join order_items oi on oi.order_id = o.id
+     group by o.id
+     order by o.created_at desc`,
+  );
+
+  return result.rows;
+}
