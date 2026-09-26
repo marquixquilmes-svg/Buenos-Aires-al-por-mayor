@@ -5,7 +5,7 @@ import { CartProvider } from '@/components/CartProvider';
 export const metadata: Metadata = {
   title: 'Buenos Aires al por mayor',
   description: 'Marketplace mayorista de Buenos Aires. Catálogos, pedidos y atención centralizada.',
-  icons: { icon: '/brand-logo-square.jpg' },
+  icons: { icon: '/brand-logo-circle.svg' },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
