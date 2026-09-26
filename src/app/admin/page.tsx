@@ -1,8 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { products } from '@/lib/catalog';
 import { hashToken, sessionCookie } from '@/lib/auth';
-import { findSessionByTokenHash, listAdminOrders } from '@/lib/db/repositories';
+import { findSessionByTokenHash, listAdminOrders, syncPendingMercadoPagoOrders } from '@/lib/db/repositories';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +30,9 @@ export default async function AdminPage() {
 
   if (!session || session.role !== 'admin') redirect('/login?next=/admin');
 
+  // Webhooks remain the primary mechanism. This reconciliation is a safety net
+  // for orders whose Mercado Pago webhook was delayed or missed.
+  await syncPendingMercadoPagoOrders();
   const orders = await listAdminOrders();
   const pending = orders.filter((order) => order.status === 'pending').length;
   const approved = orders.filter((order) => order.payment_status === 'approved').length;
@@ -67,7 +69,7 @@ export default async function AdminPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center', marginBottom: 18 }}>
           <div>
             <h2 style={{ margin: 0 }}>Pedidos recibidos</h2>
-            <p style={{ color: '#666', margin: '6px 0 0' }}>Actualizá la página para consultar los pedidos más recientes.</p>
+            <p style={{ color: '#666', margin: '6px 0 0' }}>El panel sincroniza automáticamente los pagos pendientes con Mercado Pago al abrirse.</p>
           </div>
           <span style={{ color: '#666', fontSize: 13 }}>Admin: {session.email}</span>
         </div>
