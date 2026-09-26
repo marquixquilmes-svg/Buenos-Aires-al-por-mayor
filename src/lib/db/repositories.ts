@@ -13,6 +13,18 @@ export async function createUser(email: string, passwordHash: string) {
   return result.rows[0];
 }
 
+export async function updateAdminUser(email: string, passwordHash: string) {
+  const result = await getDb().query(
+    `insert into users (email, password_hash, role)
+     values ($1, $2, 'admin')
+     on conflict (email) do update
+       set password_hash = excluded.password_hash, role = 'admin'
+     returning id, email, role`,
+    [email, passwordHash],
+  );
+  return result.rows[0];
+}
+
 export async function createSession(userId: string, tokenHash: string, expiresAt: string) {
   const result = await getDb().query(
     'insert into sessions (user_id, token_hash, expires_at) values ($1, $2, $3) returning id, expires_at',
