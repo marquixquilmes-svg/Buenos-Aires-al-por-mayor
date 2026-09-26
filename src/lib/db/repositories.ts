@@ -6,21 +6,23 @@ export async function findUserByEmail(email: string) {
 }
 
 export async function createUser(email: string, passwordHash: string) {
+  const name = email.split('@')[0] || 'Cliente';
   const result = await getDb().query(
-    'insert into users (email, password_hash) values ($1, $2) returning id, email, role',
-    [email, passwordHash],
+    'insert into users (email, password_hash, name) values ($1, $2, $3) returning id, email, role',
+    [email, passwordHash, name],
   );
   return result.rows[0];
 }
 
 export async function updateAdminUser(email: string, passwordHash: string) {
+  const name = 'Buenos Aires al por mayor';
   const result = await getDb().query(
-    `insert into users (email, password_hash, role)
-     values ($1, $2, 'admin')
+    `insert into users (email, password_hash, name, role)
+     values ($1, $2, $3, 'admin')
      on conflict (email) do update
-       set password_hash = excluded.password_hash, role = 'admin'
+       set password_hash = excluded.password_hash, name = excluded.name, role = 'admin'
      returning id, email, role`,
-    [email, passwordHash],
+    [email, passwordHash, name],
   );
   return result.rows[0];
 }
