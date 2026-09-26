@@ -95,26 +95,18 @@ export async function syncPendingMercadoPagoOrders() {
 export async function listAdminOrders() {
   const result = await getDb().query(
     `select
-       o.id,
-       o.status,
-       o.total,
-       o.guest_name,
-       o.guest_email,
-       o.guest_phone,
-       o.guest_address,
-       o.accepted_terms_at,
-       o.payment_status,
-       o.payment_provider,
-       o.payment_order_id,
-       o.payment_status_detail,
-       o.created_at,
-       o.updated_at,
+       o.id, o.status, o.total, o.guest_name, o.guest_email, o.guest_phone,
+       o.guest_address, o.accepted_terms_at, o.payment_status, o.payment_provider,
+       o.payment_order_id, o.payment_status_detail, o.created_at, o.updated_at,
        coalesce(
          jsonb_agg(
            jsonb_build_object(
              'productName', oi.product_name,
              'quantity', oi.quantity,
-             'unitPrice', oi.unit_price
+             'unitPrice', oi.unit_price,
+             'sku', oi.sku,
+             'supplierName', oi.supplier_name,
+             'catalogName', oi.catalog_name
            ) order by oi.product_name
          ) filter (where oi.id is not null),
          '[]'::jsonb
@@ -124,6 +116,66 @@ export async function listAdminOrders() {
      group by o.id
      order by o.created_at desc`,
   );
+  return result.rows;
+}
 
+export async function listStoreProducts() {
+  const result = await getDb().query(
+    `select p.id, p.name, p.category, p.price, p.stock, p.active, p.sku,
+            p.image_url, p.description, p.featured,
+            p.supplier_id as "supplierId", p.catalog_id as "catalogId",
+            s.name as "supplierName", c.name as "catalogName",
+            coalesce((select pi.image_url from product_images pi where pi.product_id = p.id order by pi.sort_order, pi.created_at limit 1), p.image_url) as "imageUrl"
+     from products p
+     left join suppliers s on s.id = p.supplier_id
+     left join catalogs c on c.id = p.catalog_id
+     where p.active = true
+     order by p.featured desc, p.name asc`,
+  );
+  return result.rows;
+}
+
+export async function listAdminSuppliers() {
+  const result = await getDb().query(
+    `select s.id, s.name, s.slug, s.location, s.website, s.instagram, s.whatsapp,
+            s.verified, s.active, count(distinct c.id)::int as catalog_count,
+            count(distinct p.id)::int as product_count
+     from suppliers s
+     left join catalogs c on c.supplier_id = s.id
+     left join products p on p.supplier_id = s.id
+     group by s.id
+     order by s.name`,
+  );
+  return result.rows;
+}
+
+export async function listAdminCatalogs() {
+  const result = await getDb().query(
+    `select c.id, c.supplier_id as "supplierId", s.name as "supplierName", c.name,
+            c.slug, c.description, c.cover_image_url as "coverImageUrl", c.active,
+            count(p.id)::int as product_count
+     from catalogs c
+     join suppliers s on s.id = c.supplier_id
+     left join products p on p.catalog_id = c.id
+     group by c.id, s.name
+     order by s.name, c.name`,
+  );
+  return result.rows;
+}
+
+export async function listAdminProducts() {
+  const result = await getDb().query(
+    `select p.id, p.name, p.slug, p.category, p.price, p.stock, p.active, p.sku,
+            p.image_url as "imageUrl", p.description, p.featured,
+            p.supplier_id as "supplierId", s.name as "supplierName",
+            p.catalog_id as "catalogId", c.name as "catalogName",
+            coalesce(jsonb_agg(jsonb_build_object('id', pi.id, 'url', pi.image_url, 'alt', pi.alt_text, 'sortOrder', pi.sort_order) order by pi.sort_order, pi.created_at) filter (where pi.id is not null), '[]'::jsonb) as images
+     from products p
+     left join suppliers s on s.id = p.supplier_id
+     left join catalogs c on c.id = p.catalog_id
+     left join product_images pi on pi.product_id = p.id
+     group by p.id, s.name, c.name
+     order by p.created_at desc, p.name`,
+  );
   return result.rows;
 }
