@@ -43,7 +43,7 @@ export default function Home() {
 
       <section id="categorias" className="section-container categories-section">
         <div className="section-heading"><div><span className="eyebrow dark">Explorá nuestras categorías</span><h2>Todo lo que tu negocio necesita</h2></div><p>Seleccioná una categoría y descubrí productos disponibles para compra mayorista.</p></div>
-        <div className="category-grid">{categories.map((category, index) => <a href="#catalogo" key={category} className="category-card"><span>{String(index + 1).padStart(2, '0')}</span><strong>{category}</strong><small>Ver productos →</small></a>)}</div>
+        <div className="category-grid">{categories.map((category, index) => <a href={`/catalogo?categoria=${encodeURIComponent(category)}`} key={category} className="category-card"><span>{String(index + 1).padStart(2, '0')}</span><strong>{category}</strong><small>Ver productos →</small></a>)}</div>
       </section>
 
       <section id="catalogo" className="catalog-section"><div className="section-container">
