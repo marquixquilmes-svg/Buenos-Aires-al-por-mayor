@@ -1,11 +1,26 @@
-import { products, categories } from '@/lib/catalog';
 import { BUSINESS_CONTACT } from '@/lib/business';
 import { AddToCartButton } from '@/components/AddToCartButton';
+import { listStoreProducts } from '@/lib/db/repositories';
+
+export const dynamic = 'force-dynamic';
 
 const squareLogo = '/brand-logo-circle.svg';
 const wideLogo = '/brand-logo-wide.svg';
 
-export default function Home() {
+export default async function Home() {
+  const dbProducts = await listStoreProducts();
+  const categories = [...new Set(dbProducts.map((product) => String(product.category)).filter(Boolean))];
+  const products = dbProducts.map((product) => ({
+    id: String(product.id),
+    name: String(product.name),
+    category: String(product.category ?? 'General'),
+    price: Number(product.price),
+    unit: 'unidad',
+    supplierId: product.supplierId ? String(product.supplierId) : undefined,
+    featured: Boolean(product.featured),
+    imageUrl: product.imageUrl ? String(product.imageUrl) : undefined,
+  }));
+
   return (
     <main className="site-shell">
       <header className="site-header">
@@ -48,7 +63,14 @@ export default function Home() {
 
       <section id="catalogo" className="catalog-section"><div className="section-container">
         <div className="section-heading catalog-heading"><div><span className="eyebrow dark">Catálogo mayorista</span><h2>Productos destacados</h2></div><a href="/carrito" className="text-link">Ver carrito →</a></div>
-        <div className="product-grid">{products.map((product) => <article key={product.id} className="product-card"><div className="product-image"><span>{product.category}</span><div>📱</div></div><div className="product-info"><h3>{product.name}</h3><div className="product-price">${product.price.toLocaleString('es-AR')}</div><p>Por {product.unit}</p><AddToCartButton product={product} /></div></article>)}</div>
+        <div className="product-grid">{products.map((product) => <article key={product.id} className="product-card">
+          <div className="product-image">
+            <span>{product.category}</span>
+            {product.imageUrl ? <img src={product.imageUrl} alt={product.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 12 }} /> : <div>📦</div>}
+          </div>
+          <div className="product-info"><h3>{product.name}</h3><div className="product-price">${product.price.toLocaleString('es-AR')}</div><p>Por {product.unit}</p><AddToCartButton product={product} /></div>
+        </article>)}</div>
+        {products.length === 0 && <div style={{ padding: 40, textAlign: 'center', color: '#666' }}>El catálogo está actualizándose. Volvé a intentar en unos minutos.</div>}
       </div></section>
 
       <section className="contact-banner"><div className="section-container contact-inner"><div><span className="eyebrow">Atención centralizada</span><h2>Hablemos de tu próximo pedido.</h2><p>Consultá por productos, disponibilidad, proveedores y envíos. Te atendemos directamente desde Buenos Aires al por mayor.</p></div><a href={`${BUSINESS_CONTACT.whatsappUrl}?text=${encodeURIComponent('Hola, quiero consultar por un pedido mayorista')}`} target="_blank" rel="noreferrer" className="button button-light">Hablar por WhatsApp</a></div></section>
