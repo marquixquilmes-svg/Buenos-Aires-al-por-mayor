@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db/client';
+import { ensureDatabaseReady } from '@/lib/db/client';
 import { getMercadoPagoOrder, verifyMercadoPagoSignature } from '@/lib/mercadopago';
 
 export async function POST(request: NextRequest) {
@@ -26,7 +26,14 @@ export async function POST(request: NextRequest) {
       : status === 'cancelled' || status === 'canceled' ? 'cancelled'
       : status === 'rejected' ? 'rejected' : 'pending';
 
-    const db = getDb();
+    const db = await ensureDatabaseReady();
+    const quote = await db.query(
+      `update quote_requests set status=case when $1='approved' then 'paid' when $1 in ('cancelled','rejected') then 'quoted' else status end,
+       payment_status_detail=$2,updated_at=now()
+       where id=$3::uuid and payment_order_id=$4 and status='payment_pending' returning id`,
+      [paymentStatus, String(mpOrder.status_detail ?? status), externalReference, dataId],
+    );
+    if (quote.rowCount) return NextResponse.json({ ok: true });
     await db.query(
       `update orders
        set payment_status = $1, payment_status_detail = $2,

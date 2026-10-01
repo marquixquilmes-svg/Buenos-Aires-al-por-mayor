@@ -1,0 +1,8 @@
+import { useState } from 'react';
+import { router } from 'expo-router';
+import { Alert,Text } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { useAuth } from '../lib/auth';
+import { API } from '../lib/api';
+import { Body,Button,Card,Field,Screen,Title } from '../components/UI';
+export default function Cuenta(){const {email,signOut,removeAccount}=useAuth(),[password,setPassword]=useState(''),[error,setError]=useState('');function confirmDelete(){Alert.alert('Eliminar cuenta','Se eliminarán tu cuenta y tus solicitudes. Los registros de pagos pueden conservarse sin vínculo a tu cuenta. Esta acción no se puede deshacer.',[{text:'Cancelar',style:'cancel'},{text:'Eliminar',style:'destructive',onPress:async()=>{try{await removeAccount(password);router.replace('/login')}catch(e){setError(e instanceof Error?e.message:'No se pudo eliminar.')}}}])}return <Screen><Title>Mi cuenta</Title><Body>{email}</Body><Card><Button secondary onPress={()=>void WebBrowser.openBrowserAsync(`${API}/privacidad`)}>Privacidad</Button><Button secondary onPress={()=>void WebBrowser.openBrowserAsync(`${API}/terminos-y-condiciones`)}>Términos</Button><Button secondary onPress={()=>{void signOut().then(()=>router.replace('/login'))}}>Cerrar sesión</Button></Card><Card><Text style={{fontSize:20,fontWeight:'800',marginBottom:12}}>Eliminar mi cuenta</Text><Body>Confirmá con tu contraseña. También podés solicitarlo en buenosairesalpormayor.com/eliminar-cuenta.</Body><Field label="Contraseña" value={password} onChangeText={setPassword} secureTextEntry /><Button disabled={!password} onPress={confirmDelete}>Eliminar definitivamente</Button>{error?<Text style={{color:'#b42318',marginTop:12}}>{error}</Text>:null}</Card></Screen>}

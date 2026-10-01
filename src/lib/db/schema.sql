@@ -39,3 +39,14 @@ create index if not exists orders_status_idx on orders(status);
 create index if not exists orders_payment_status_idx on orders(payment_status);
 create index if not exists orders_guest_email_idx on orders(guest_email);
 create index if not exists orders_guest_phone_idx on orders(guest_phone);
+create table if not exists quote_requests (
+  id uuid primary key default gen_random_uuid(), user_id uuid references users(id),
+  category text not null, description text not null, quantity integer not null check (quantity > 0),
+  reference_url text, delivery_address text not null, phone text not null,
+  status text not null default 'requested' check (status in ('requested','quoted','payment_pending','paid','preparing','shipped','delivered','cancelled')),
+  item_price numeric(12,2), shipping_price numeric(12,2), quote_note text, quote_expires_at timestamptz,
+  payment_order_id text unique, payment_status_detail text, tracking text,
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now()
+);
+create index if not exists quote_requests_user_idx on quote_requests(user_id, created_at desc);
+alter table quote_requests alter column user_id drop not null;

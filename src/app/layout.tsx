@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   title: 'Buenos Aires al por mayor',
   description: 'Marketplace mayorista de Buenos Aires. Catálogos, pedidos y atención centralizada.',
   icons: { icon: '/brand-logo-circle.svg' },
+  manifest: '/manifest.webmanifest',
+  appleWebApp: { capable: true, title: 'BA Mayorista' },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

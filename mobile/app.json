@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Buenos Aires al por mayor",
+    "slug": "buenos-aires-al-por-mayor",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.buenosairesalpormayor.app"
+    },
+    "android": {
+      "package": "com.buenosairesalpormayor.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "bamayorista",
+    "description": "Pedí, recibí tu cotización, pagá con Mercado Pago y seguí tu envío.",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-web-browser",
+      "expo-status-bar"
+    ]
+  }
+}
