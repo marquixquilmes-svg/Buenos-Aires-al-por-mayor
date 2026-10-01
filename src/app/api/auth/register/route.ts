@@ -9,9 +9,9 @@ export async function POST(request: Request) {
   const email = normalizeEmail(body?.email ?? '');
   const password = body?.password ?? '';
   if (!isValidEmail(email) || !isStrongEnoughPassword(password)) {
-    return NextResponse.json({ error: 'Email or password is invalid' }, { status: 400 });
+    return NextResponse.json({ error: 'Ingresá un email válido y una contraseña de al menos 8 caracteres.' }, { status: 400 });
   }
-  if (await findUserByEmail(email)) return NextResponse.json({ error: 'Unable to create account' }, { status: 409 });
+  if (await findUserByEmail(email)) return NextResponse.json({ error: 'Este email ya tiene una cuenta. Tocá «Ingresar» y usá la contraseña de tu cuenta en esta web.' }, { status: 409 });
 
   const user = await createUser(email, await hashPassword(password));
   const token = createSessionToken();
