@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { hashToken, sessionCookie } from '@/lib/auth';
 import { findSessionByTokenHash, listAdminOrders, syncPendingMercadoPagoOrders } from '@/lib/db/repositories';
 import AdminCatalogManager from '@/components/AdminCatalogManager';
+import AdminQuoteManager from '@/components/AdminQuoteManager';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,6 +48,7 @@ export default async function AdminPage() {
       </section>
 
       <AdminCatalogManager />
+      <AdminQuoteManager />
     </main>
   );
 }

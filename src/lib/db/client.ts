@@ -35,6 +35,29 @@ async function migrateDatabase(db: Pool) {
 
     CREATE INDEX IF NOT EXISTS orders_payment_status_idx
       ON orders (payment_status);
+
+    CREATE TABLE IF NOT EXISTS quote_requests (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id),
+      category TEXT NOT NULL,
+      description TEXT NOT NULL,
+      quantity INTEGER NOT NULL CHECK (quantity > 0),
+      reference_url TEXT,
+      delivery_address TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'requested' CHECK (status IN ('requested','quoted','payment_pending','paid','preparing','shipped','delivered','cancelled')),
+      item_price NUMERIC(12,2),
+      shipping_price NUMERIC(12,2),
+      quote_note TEXT,
+      quote_expires_at TIMESTAMPTZ,
+      payment_order_id TEXT UNIQUE,
+      payment_status_detail TEXT,
+      tracking TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS quote_requests_user_idx ON quote_requests(user_id, created_at DESC);
+    ALTER TABLE quote_requests ALTER COLUMN user_id DROP NOT NULL;
   `);
 }
 

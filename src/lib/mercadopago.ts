@@ -20,6 +20,7 @@ export async function createMercadoPagoOrder(input: {
   email: string;
   items: MercadoPagoItem[];
   baseUrl: string;
+  returnPath?: string;
 }) {
   const totalAmount = input.total.toFixed(2);
   const externalReference = input.orderId.replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 64);
@@ -43,9 +44,9 @@ export async function createMercadoPagoOrder(input: {
     }],
     config: {
       online: {
-        success_url: `${input.baseUrl}/checkout/success?order=${input.orderId}`,
-        failure_url: `${input.baseUrl}/checkout/failure?order=${input.orderId}`,
-        pending_url: `${input.baseUrl}/checkout/pending?order=${input.orderId}`,
+        success_url: `${input.baseUrl}${input.returnPath ?? '/checkout/success'}?order=${input.orderId}&result=success`,
+        failure_url: `${input.baseUrl}${input.returnPath ?? '/checkout/failure'}?order=${input.orderId}&result=failure`,
+        pending_url: `${input.baseUrl}${input.returnPath ?? '/checkout/pending'}?order=${input.orderId}&result=pending`,
         auto_return: 'approved',
       },
     },
